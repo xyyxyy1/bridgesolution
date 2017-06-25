@@ -156,7 +156,7 @@ class Deck(object):
     def random_play(self):
         while len(self.played_card) < self.total_card_number:
             card = self.hands[self.current_direct].random_card()
-            self.play_next_card(card)
+            self.play_card(card)
             # card.display()
 
     def minimax(self):

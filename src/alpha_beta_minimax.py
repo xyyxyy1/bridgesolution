@@ -9,9 +9,9 @@ def alpha_beta_minimax(deck):
     cards = deck.viable_cards
     if len(cards) == 0:
         if deck.current_direct in deck.declare_direct:
-            return deck.max_winners
+            return deck.total_turns - sum([deck.current_result[direct] for direct in deck.declare_direct])
         elif deck.current_direct in deck.defence_direct:
-            return deck.min_winners
+            return sum([deck.current_result[direct] for direct in deck.defence_direct])
 
     # if declare is playing in turn
     if deck.current_direct in deck.declare_direct:
