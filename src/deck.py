@@ -85,9 +85,13 @@ class Deck(object):
     # compute the new direction based on last four cards
     def close_turn(self):
         # todo: implement this function using winner function
-        # include: decide who is the winner
-        # change current result
-        # change new direction
+        winner_index = winner(self.played_card[-4:], self.trump)
+        self.current_direct = self.table.player_directions[
+            (self.table.player_directions.index(self.current_direct) + winner_index) % len(self.table.player_directions)]
+        if self.current_direct in ["North", "South"]:
+            self.current_result["NS"] += 1
+        else:
+            self.current_result["EW"] += 1
         self.current_color = None
 
     # randomly play the hand
@@ -99,7 +103,9 @@ class Deck(object):
 
     # todo: display the following function in a more elegant way
     def display_played_cards(self):
+        print("trump: ", self.trump)
         for n in range(len(self.played_card)):
-            self.played_card[n].display()
+            direct = [direct for direct, hand in self.original_hands.items() if self.played_card[n] in hand.cards][0]
+            self.played_card[n].display(direct)
             if n % 4 == 3:
                 print("\n")

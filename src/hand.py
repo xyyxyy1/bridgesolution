@@ -56,6 +56,6 @@ class Hand(object):
 
     # print out the hand.
     # todo: graphics interface to display hand
-    def display(self):
+    def display(self, direct=""):
         for card in self.sorted_hand():
-            print(card.color, Card.card_nums[Card.nums.index(card.num)])
+            print(direct, card.color, Card.card_nums[Card.nums.index(card.num)])

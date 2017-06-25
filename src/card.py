@@ -16,6 +16,15 @@ class Card(object):
         self.color = color
         self.num = num
 
+    def __key(self):
+        return self.color, self.num
+
+    def __eq__(self, y):
+        return self.__key() == y.__key()
+
+    def __hash__(self):
+        return hash(self.__key())
+
     # def __gt__(self, other):
     #     if Card.colors.index(self.color) > Card.colors.index(other.color):
     #         return True
@@ -26,8 +35,8 @@ class Card(object):
 
     # print out card
     # todo: graphics interface to display hand
-    def display(self):
-        print(self.color, " ", Card.card_nums[Card.nums.index(self.num)])
+    def display(self, direct=""):
+        print(direct, self.color, " ", Card.card_nums[Card.nums.index(self.num)])
 
     @staticmethod
     def get_key(card):

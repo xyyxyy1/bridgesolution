@@ -24,7 +24,7 @@ def next_direc(direc):
 
 def partner(direc):
     # 同伴关系
-    if direc == 'Norht':
+    if direc == 'North':
         return "South"
     if direc == 'East':
         return "West"
@@ -34,6 +34,10 @@ def partner(direc):
         return "East"
 
 
-def winer(a, b, c, d):
-    # todo: implement method to compare winner of the turn
-    return "N"
+def winner(cards, trump_color):
+    if any([card.color == trump_color for card in cards]):
+        color = trump_color
+    else:
+        color = cards[0].color
+    return cards.index(max([card for card in cards if card.color == color], key=lambda c: c.num))
+
