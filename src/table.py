@@ -44,8 +44,8 @@ class Table(object):
             elif s not in self._players:
                 self._players[s] = s
 
-    def next_deck(self):
-        new_deck = Deck(self, self.deck_num)
+    def next_deck(self, hands=None):
+        new_deck = Deck(self, self.deck_num, hands)
         self.deck_num += 1
         self.deck[self.deck_num] = new_deck
         return new_deck

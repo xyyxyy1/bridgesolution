@@ -8,6 +8,7 @@ def alpha_beta_minimax(deck):
     # check if there is no card to play
     cards = deck.viable_cards
     if len(cards) == 0:
+        assert(sum([deck.current_result[direct] for direct in deck.table.player_directions]) == deck.total_turns)
         if deck.current_direct in deck.declare_direct:
             return deck.total_turns - sum([deck.current_result[direct] for direct in deck.declare_direct])
         elif deck.current_direct in deck.defence_direct:

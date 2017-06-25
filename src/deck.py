@@ -22,7 +22,7 @@ class Deck(object):
     trumps = ["Club", "Diamond", "Heart", "Spade", "No trump"]
     total_turns = 13
 
-    def __init__(self, table, deck_num):
+    def __init__(self, table, deck_num, hands=None):
         self.table = table
         self.deck_num = deck_num
         self.auction = []
@@ -33,7 +33,7 @@ class Deck(object):
         self.current_direct = self.lead_direct
         self.current_color = None
         self.hands = {direct: Hand(self) for direct in self.table.player_directions}
-        self.redeal()
+        self.redeal(hands)
         self.original_hands = copy.deepcopy(self.hands)
         self.played_card = []
 
@@ -79,15 +79,23 @@ class Deck(object):
         # todo: compute equal cards to get simpler card format
         return cards
 
-    def redeal(self):
-        full_deck = complete_deck()
-        while full_deck:
-            card = full_deck.pop()
-            direct = self.table.player_directions[npr.randint(4)]
-            if self.hands[direct].card_n < Hand.max_card_n:
-                self.hands[direct].undo_card(card)
-            else:
-                full_deck.add(card)
+    def redeal(self, hands):
+        if not hands:
+            full_deck = complete_deck()
+            while full_deck:
+                card = full_deck.pop()
+                direct = self.table.player_directions[npr.randint(4)]
+                if self.hands[direct].card_n < Hand.max_card_n:
+                    self.hands[direct].undo_card(card)
+                else:
+                    full_deck.add(card)
+        else:
+            for direct, hand in hands.items():
+                for color, nums in hand.items():
+                    for num in nums:
+                        self.hands[direct].undo_card(Card(color, num))
+
+
 
     def init_direction(self, lead_direct=None):
         self.lead_direct = lead_direct
