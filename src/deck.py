@@ -2,7 +2,7 @@ import copy
 from src.util import *
 from src.hand import Hand
 import numpy.random as npr
-
+from src.alpha_beta_minimax import *
 
 class Deck(object):
     """
@@ -20,14 +20,17 @@ class Deck(object):
 
     # static variables
     trumps = ["Club", "Diamond", "Heart", "Spade", "No trump"]
+    total_turns = 13
 
     def __init__(self, table, deck_num):
         self.table = table
         self.deck_num = deck_num
-        self._trump = None
         self.auction = []
-        self.current_result = {"NS": 0, "EW": 0}
-        self.current_direct = self.open_bidder
+        self._trump = None
+        self.init_direction()
+        self.init_minimax()
+        self.current_result = {direct: 0 for direct in self.table.player_directions}
+        self.current_direct = self.lead_direct
         self.current_color = None
         self.hands = {direct: Hand(self) for direct in self.table.player_directions}
         self.redeal()
@@ -50,12 +53,31 @@ class Deck(object):
             self._trump = bid_trump
 
     @property
+    def lead_direct(self):
+        return self._lead_direct
+
+    @lead_direct.setter
+    def lead_direct(self, direct):
+        if not direct or direct not in self.table.player_directions:
+            self._lead_direct = self.table.player_directions[-1]
+        else:
+            self._lead_direct = direct
+
+    @property
     def vulnerability(self):
         return self.table.vulnerability_table[(self.deck_num - 1) % len(self.table.vulnerability_table)]
 
     @property
     def open_bidder(self):
         return self.table.player_directions[(self.deck_num - 1) % len(self.table.player_directions)]
+
+    @property
+    def viable_cards(self):
+        cards = [card for card in self.hands[self.current_direct].cards if card.color == self.current_color]
+        if not cards:
+            cards = self.hands[self.current_direct].cards
+        # todo: compute equal cards to get simpler card format
+        return cards
 
     def redeal(self):
         full_deck = complete_deck()
@@ -67,32 +89,68 @@ class Deck(object):
             else:
                 full_deck.add(card)
 
+    def init_direction(self, lead_direct=None):
+        self.lead_direct = lead_direct
+        if lead_direct in ["North", "South"]:
+            self.declare_direct = ["East", "West"]
+            self.defence_direct = ["North", "South"]
+        else:
+            self.declare_direct = ["North", "South"]
+            self.defence_direct = ["East", "West"]
+
+    def init_minimax(self):
+        self.max_winners = Deck.total_turns
+        self.min_winners = 0
+
+    def update_minimax(self):
+        self.max_winners = min(self.max_winners,
+                               Deck.total_turns - sum([self.current_result[direct] for direct in self.declare_direct]))
+        self.min_winners = max(self.min_winners,
+                               sum([self.current_result[direct] for direct in self.defence_direct]))
+
     def next_bid(self):
         # todo: method to add bidding process
         pass
 
-    def play_next_card(self, card):
-        self.hands[self.current_direct].play_card(card)
+    def play_card(self, card):
         # if this is the first card for a new turn, change the color
         if not len(self.played_card) % 4:
             self.current_color = card.color
+        self.hands[self.current_direct].play_card(card)
         self.played_card.append(card)
         # if this is the last card for a new turn, compute for result and new direct
         self.current_direct = next_direc(self.current_direct)
         if not len(self.played_card) % 4:
             self.close_turn()
 
+    def undo_card(self, card):
+        # if this is the last card for a new turn, compute for result and new direct
+        if not len(self.played_card) % 4:
+            self.reverse_close_turn()
+        self.current_direct = previous_direc(self.current_direct)
+        self.hands[self.current_direct].undo_card(card)
+        self.played_card.pop()
+        # if this now is the first card for a new turn, change the color
+        if not len(self.played_card) % 4:
+            self.current_color = None
+
     # compute the new direction based on last four cards
     def close_turn(self):
-        # todo: implement this function using winner function
         winner_index = winner(self.played_card[-4:], self.trump)
         self.current_direct = self.table.player_directions[
             (self.table.player_directions.index(self.current_direct) + winner_index) % len(self.table.player_directions)]
-        if self.current_direct in ["North", "South"]:
-            self.current_result["NS"] += 1
-        else:
-            self.current_result["EW"] += 1
+        self.current_result[self.current_direct] += 1
         self.current_color = None
+        self.update_minimax()
+
+    def reverse_close_turn(self):
+        winner_index = winner(self.played_card[-4:], self.trump)
+        self.current_direct = self.table.player_directions[
+            (self.table.player_directions.index(self.current_direct) - winner_index) % len(
+                self.table.player_directions)]
+        self.current_result[self.current_direct] -= 1
+        self.current_color = self.played_card[-4].color
+        self.update_minimax()
 
     # randomly play the hand
     def random_play(self):
@@ -100,6 +158,9 @@ class Deck(object):
             card = self.hands[self.current_direct].random_card()
             self.play_next_card(card)
             # card.display()
+
+    def minimax(self):
+        alpha_beta_minimax(self)
 
     # todo: display the following function in a more elegant way
     def display_played_cards(self):

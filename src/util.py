@@ -21,6 +21,17 @@ def next_direc(direc):
     if direc == 'West':
         return "North"
 
+def previous_direc(direc):
+    # 下家关系
+    if direc == 'North':
+        return "West"
+    if direc == 'East':
+        return "North"
+    if direc == 'South':
+        return "East"
+    if direc == 'West':
+        return "South"
+
 
 def partner(direc):
     # 同伴关系
